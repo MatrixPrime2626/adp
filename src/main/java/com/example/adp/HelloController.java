@@ -4,6 +4,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 @RestController
@@ -118,5 +122,33 @@ class HelloController {
     @GetMapping("/postlogs")
     public Collection<PostLog> getAllPostLogs() {
         return this.postLogRepository.findAll();
+    }
+
+    @GetMapping("/pojo/lastnocase/{lastname}")
+    public Collection<MyPOJO> findByLastNameAuto(@PathVariable("lastname") String lastname) {
+        return this.pojoRepository.findByLastNameIgnoreCase(lastname);
+    }
+
+    @GetMapping("/appinfo")
+    public String[] getInfo() {
+        final Class c = this.getClass();
+        final String cResourceName = c.getName().replace( '.', '/') + ".class";
+        final URL classURL = c.getClassLoader().getResource( cResourceName);
+        try {
+            String protocol = classURL.getProtocol();
+            if ( protocol.equals( "file")) {
+                String pathToPackageRoot = URLDecoder.decode( classURL.getPath(), StandardCharsets.UTF_8);
+                pathToPackageRoot = pathToPackageRoot.substring( 0, pathToPackageRoot.length() - (cResourceName.length() + 1));
+                return new String[] { protocol, pathToPackageRoot };
+            } else if ( protocol.equals( "jar")) {
+                String jarURL = classURL.toURI().getRawSchemeSpecificPart();
+                final int i = jarURL.indexOf( "!");
+                if ( i != -1) { jarURL = jarURL.substring( 0, i); }
+                return new String[] { protocol, jarURL };
+            }
+        } catch( final URISyntaxException x) {
+            x.printStackTrace();
+        }
+        return null;
     }
 }

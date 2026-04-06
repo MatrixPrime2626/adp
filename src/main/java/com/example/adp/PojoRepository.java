@@ -2,4 +2,8 @@ package com.example.adp;
 
 import org.springframework.data.repository.ListCrudRepository;
 
-public interface PojoRepository extends ListCrudRepository<MyPOJO,Long> {}
+import java.util.List;
+
+public interface PojoRepository extends ListCrudRepository<MyPOJO,Long> {
+    List<MyPOJO> findByLastNameIgnoreCase(String lastname);
+}
